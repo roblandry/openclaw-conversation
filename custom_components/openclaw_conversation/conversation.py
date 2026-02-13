@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import logging
 from typing import Literal
 
@@ -40,6 +39,11 @@ class OpenClawConversationAgent(conversation.AbstractConversationAgent):
         self._conversations: dict[str, list[dict]] = {}
 
     @property
+    def attribution(self) -> dict[str, str]:
+        """Return attribution."""
+        return {"name": "Powered by OpenClaw", "url": "https://openclaw.ai"}
+
+    @property
     def supported_languages(self) -> list[str] | Literal["*"]:
         """Return supported languages."""
         return "*"
@@ -61,7 +65,7 @@ class OpenClawConversationAgent(conversation.AbstractConversationAgent):
             response_text = await self._call_openclaw(messages)
         except Exception as err:
             _LOGGER.error("Error calling OpenClaw: %s", err)
-            response_text = f"Désolé, erreur de communication avec OpenClaw: {err}"
+            response_text = "Erreur de communication avec OpenClaw."
 
         # Add assistant response to history
         messages.append({"role": "assistant", "content": response_text})
@@ -90,17 +94,18 @@ class OpenClawConversationAgent(conversation.AbstractConversationAgent):
             "messages": messages,
         }
 
-        async with aiohttp.ClientSession() as session:
+        timeout = aiohttp.ClientTimeout(total=self._timeout)
+
+        async with aiohttp.ClientSession(timeout=timeout) as session:
             async with session.post(
                 f"{self._base_url}/v1/chat/completions",
                 json=payload,
                 headers=headers,
-                timeout=aiohttp.ClientTimeout(total=self._timeout),
             ) as resp:
                 if resp.status != 200:
                     body = await resp.text()
                     raise RuntimeError(
-                        f"OpenClaw returned {resp.status}: {body}"
+                        f"OpenClaw returned {resp.status}: {body[:200]}"
                     )
 
                 data = await resp.json()
