@@ -106,7 +106,6 @@ class OpenClawConversationAgent(conversation.AbstractConversationAgent):
             "model": self._model,
             "messages": api_messages,
             "stream": True,
-            "user": conversation_id,
         }
 
         async with self._session.post(
