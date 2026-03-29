@@ -3,7 +3,7 @@
 [![HACS](https://img.shields.io/badge/HACS-Custom-orange?style=flat-square)](https://hacs.xyz/)
 [![GitHub Release](https://img.shields.io/github/v/release/nicolasglg/openclaw-conversation?style=flat-square)](https://github.com/nicolasglg/openclaw-conversation/releases)
 [![License](https://img.shields.io/github/license/nicolasglg/openclaw-conversation?style=flat-square)](LICENSE)
-[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-support-yellow?style=flat-square&logo=buy-me-a-coffee)](https://buymeacoffee.com/nicolasglg)
+[![Buy Me A Beer](https://img.shields.io/badge/Buy%20Me%20A%20Beer-support-yellow?style=flat-square&logo=buy-me-a-coffee)](https://buymeacoffee.com/nicolasglg)
 
 **Turn your [OpenClaw](https://openclaw.ai) agent into a Home Assistant voice assistant.**
 
@@ -137,7 +137,7 @@ Restart your gateway after the change.
 
 Like it? Found it useful?
 
-[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-☕%20Support%20this%20project-yellow?style=for-the-badge&logo=buy-me-a-coffee)](https://buymeacoffee.com/nicolasglg)
+[![Buy Me A Beer](https://img.shields.io/badge/Buy%20Me%20A%20Beer-☕%20Support%20this%20project-yellow?style=for-the-badge&logo=buy-me-a-coffee)](https://buymeacoffee.com/nicolasglg)
 
 ## Links
 
