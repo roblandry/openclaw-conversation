@@ -1,5 +1,13 @@
 # OpenClaw Conversation for Home Assistant
 
+> ⚠️ **This project is no longer actively maintained (as of April 2026).**
+>
+> I am not using OpenClaw myself anymore, so I won't be shipping new fixes or features here going forward. The code as of **v0.4.2** is stable and works for the setups it was tested against, but new issues and pull requests will not be actively worked on from my side.
+>
+> **Want to keep it going?** The repo stays public on purpose — feel free to fork it and take it wherever you need. [@RetiredWizard's fork](https://github.com/RetiredWizard/openclaw-conversation) already contains interesting improvements (single-session conversation handling, extra context loading on the first prompt) and is a good starting point if you want to build on something.
+>
+> Thanks to everyone who used, tested, and reported issues on this project 🙏
+
 [![HACS](https://img.shields.io/badge/HACS-Custom-orange?style=flat-square)](https://hacs.xyz/)
 [![GitHub Release](https://img.shields.io/github/v/release/nicolasglg/openclaw-conversation?style=flat-square)](https://github.com/nicolasglg/openclaw-conversation/releases)
 [![License](https://img.shields.io/github/license/nicolasglg/openclaw-conversation?style=flat-square)](LICENSE)
