@@ -9,7 +9,7 @@ CONF_TIMEOUT = "timeout"
 CONF_SYSTEM_PROMPT = "system_prompt"
 CONF_STRIP_EMOJI = "strip_emoji"
 
-DEFAULT_MODEL = "openclaw:voice"
+DEFAULT_MODEL = "openclaw:main"
 DEFAULT_TIMEOUT = 0
 DEFAULT_STRIP_EMOJI = True
 DEFAULT_BASE_URL = "http://127.0.0.1:18789"
