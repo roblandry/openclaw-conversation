@@ -16,6 +16,21 @@
           "system_prompt": "Instructions envoyées avant chaque conversation (ex : réponses courtes pour la voix)",
           "timeout": "Mettre à 0 pour désactiver le timeout (recommandé pour les requêtes longues)"
         }
+      },
+      "reconfigure": {
+        "title": "Reconfigurer OpenClaw",
+        "description": "Mettez à jour les paramètres de connexion au Gateway OpenClaw.",
+        "data": {
+          "base_url": "URL du Gateway OpenClaw",
+          "api_key": "Token API",
+          "model": "Modèle",
+          "timeout": "Timeout (secondes, 0 = illimité)",
+          "system_prompt": "Prompt système"
+        },
+        "data_description": {
+          "system_prompt": "Instructions envoyées avant chaque conversation (ex : réponses courtes pour la voix)",
+          "timeout": "Mettre à 0 pour désactiver le timeout (recommandé pour les requêtes longues)"
+        }
       }
     },
     "error": {
@@ -28,7 +43,7 @@
       "endpoint_disabled": "L'endpoint Chat Completions n'est pas activé sur le Gateway.",
       "server_error": "Le gateway a renvoyé une erreur serveur (5xx). Vérifiez les logs du gateway.",
       "bad_request": "Le gateway a rejeté la requête (400). Vérifiez que le nom du modèle et le payload sont valides — consultez les logs Home Assistant pour le corps de la réponse du gateway.",
-      "model_not_available": "Le modèle configuré n'est pas disponible sur ce Gateway OpenClaw. Essayez un modèle qui existe sur votre gateway (ex: 'openclaw:main')."
+      "model_not_available": "Le modèle configuré n'est pas disponible sur ce Gateway OpenClaw. Essayez un modèle qui existe sur votre gateway (ex: 'openclaw/default')."
     }
   },
   "options": {
