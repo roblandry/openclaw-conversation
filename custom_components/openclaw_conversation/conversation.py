@@ -28,6 +28,7 @@ from homeassistant.helpers.chat_session import async_get_chat_session
 from homeassistant.util import dt as dt_util, ulid
 
 from .const import (
+    CONF_AGENT_ID,
     CONF_API_KEY,
     CONF_BASE_URL,
     CONF_MODEL,
@@ -35,6 +36,7 @@ from .const import (
     CONF_STRIP_EMOJI,
     CONF_SYSTEM_PROMPT,
     CONF_TIMEOUT,
+    DEFAULT_AGENT_ID,
     DEFAULT_MODEL,
     DEFAULT_SESSION_KEY,
     DEFAULT_STRIP_EMOJI,
@@ -182,13 +184,17 @@ class OpenClawConversationAgent(AbstractConversationAgent):
         self._base_url = config[CONF_BASE_URL]
         self._api_key = config[CONF_API_KEY]
         self._model = config.get(CONF_MODEL, DEFAULT_MODEL)
+        self._agent_id = self._normalize_agent_id(
+            config.get(CONF_AGENT_ID, DEFAULT_AGENT_ID)
+        )
         self._timeout = self._normalize_timeout(
             config.get(CONF_TIMEOUT, DEFAULT_TIMEOUT)
         )
         self._system_prompt = config.get(CONF_SYSTEM_PROMPT, DEFAULT_SYSTEM_PROMPT)
         self._strip_emoji = config.get(CONF_STRIP_EMOJI, DEFAULT_STRIP_EMOJI)
         self._session_key = self._normalize_session_key(
-            config.get(CONF_SESSION_KEY, DEFAULT_SESSION_KEY)
+            config.get(CONF_SESSION_KEY, DEFAULT_SESSION_KEY),
+            self._agent_id,
         )
 
     @property
@@ -272,8 +278,22 @@ class OpenClawConversationAgent(AbstractConversationAgent):
         }
 
     @staticmethod
-    def _normalize_session_key(value: object) -> str:
+    def _normalize_agent_id(value: object) -> str:
+        """Normalize the configured OpenClaw agent id."""
+        if isinstance(value, str):
+            return value.strip()
+        return DEFAULT_AGENT_ID
+
+    @staticmethod
+    def _normalize_session_key(value: object, agent_id: str = DEFAULT_AGENT_ID) -> str:
         """Normalize the configured OpenClaw session key."""
+        if agent_id:
+            if isinstance(value, str) and value.strip() not in (
+                "",
+                DEFAULT_SESSION_KEY,
+            ):
+                return value.strip()
+            return f"agent:{agent_id}:home-assistant-assist"
         if isinstance(value, str) and value.strip():
             return value.strip()
         return DEFAULT_SESSION_KEY
@@ -335,6 +355,8 @@ class OpenClawConversationAgent(AbstractConversationAgent):
             "user_id": principal["user_id"],
             "device_id": principal["device_id"],
         }
+        if self._agent_id:
+            payload["agent_id"] = self._agent_id
         timeout = self._build_timeout()
         session = async_get_clientsession(self.hass)
         async with session.post(

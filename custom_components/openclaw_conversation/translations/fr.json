@@ -9,13 +9,15 @@
           "base_url": "URL du Gateway OpenClaw",
           "api_key": "Token API",
           "model": "Modèle",
+          "agent_id": "ID de l'agent OpenClaw",
           "timeout": "Timeout (secondes, 0 = illimité)",
           "system_prompt": "Prompt système",
           "session_key": "Clé de session OpenClaw"
         },
         "data_description": {
+          "agent_id": "ID d'agent OpenClaw optionnel. Laissez vide pour utiliser la valeur par défaut du gateway. Si défini, la clé de session par défaut devient agent:AGENT_ID:home-assistant-assist.",
           "system_prompt": "Instructions envoyées avant chaque conversation (ex : réponses courtes pour la voix)",
-          "session_key": "Session OpenClaw stable utilisée pour le contexte Home Assistant Assist. Pour cibler un agent précis, utilisez agent:AGENT_ID:home-assistant-assist.",
+          "session_key": "Session OpenClaw stable utilisée pour le contexte Home Assistant Assist. Laissez la valeur par défaut pour la dériver de l'ID d'agent, ou saisissez une clé personnalisée pour la remplacer.",
           "timeout": "Mettre à 0 pour désactiver le timeout (recommandé pour les requêtes longues)"
         }
       },
@@ -26,13 +28,15 @@
           "base_url": "URL du Gateway OpenClaw",
           "api_key": "Token API",
           "model": "Modèle",
+          "agent_id": "ID de l'agent OpenClaw",
           "timeout": "Timeout (secondes, 0 = illimité)",
           "system_prompt": "Prompt système",
           "session_key": "Clé de session OpenClaw"
         },
         "data_description": {
+          "agent_id": "ID d'agent OpenClaw optionnel. Laissez vide pour utiliser la valeur par défaut du gateway. Si défini, la clé de session par défaut devient agent:AGENT_ID:home-assistant-assist.",
           "system_prompt": "Instructions envoyées avant chaque conversation (ex : réponses courtes pour la voix)",
-          "session_key": "Session OpenClaw stable utilisée pour le contexte Home Assistant Assist. Pour cibler un agent précis, utilisez agent:AGENT_ID:home-assistant-assist.",
+          "session_key": "Session OpenClaw stable utilisée pour le contexte Home Assistant Assist. Laissez la valeur par défaut pour la dériver de l'ID d'agent, ou saisissez une clé personnalisée pour la remplacer.",
           "timeout": "Mettre à 0 pour désactiver le timeout (recommandé pour les requêtes longues)"
         }
       }
@@ -56,13 +60,15 @@
         "title": "Options OpenClaw Conversation",
         "data": {
           "model": "Modèle",
+          "agent_id": "ID de l'agent OpenClaw",
           "timeout": "Timeout (secondes, 0 = illimité)",
           "system_prompt": "Prompt système",
           "session_key": "Clé de session OpenClaw",
           "strip_emoji": "Supprimer les emojis des réponses"
         },
         "data_description": {
-          "session_key": "Session OpenClaw stable utilisée pour le contexte Home Assistant Assist. Pour cibler un agent précis, utilisez agent:AGENT_ID:home-assistant-assist.",
+          "agent_id": "ID d'agent OpenClaw optionnel. Laissez vide pour utiliser la valeur par défaut du gateway. Si défini, la clé de session par défaut devient agent:AGENT_ID:home-assistant-assist.",
+          "session_key": "Session OpenClaw stable utilisée pour le contexte Home Assistant Assist. Laissez la valeur par défaut pour la dériver de l'ID d'agent, ou saisissez une clé personnalisée pour la remplacer.",
           "timeout": "Mettre à 0 pour désactiver le timeout (recommandé pour les requêtes longues)"
         }
       }

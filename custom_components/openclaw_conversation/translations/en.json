@@ -9,13 +9,15 @@
           "base_url": "OpenClaw Gateway URL",
           "api_key": "API Token",
           "model": "Model",
+          "agent_id": "OpenClaw agent ID",
           "timeout": "Timeout (seconds, 0 = no limit)",
           "system_prompt": "System prompt",
           "session_key": "OpenClaw session key"
         },
         "data_description": {
+          "agent_id": "Optional OpenClaw agent ID. Leave blank to use the gateway default. If set, the default session key becomes agent:AGENT_ID:home-assistant-assist.",
           "system_prompt": "Instructions sent before each conversation (e.g. keep responses short for voice)",
-          "session_key": "Stable OpenClaw session used for Home Assistant Assist context. To pin to a specific agent, use agent:AGENT_ID:home-assistant-assist.",
+          "session_key": "Stable OpenClaw session used for Home Assistant Assist context. Leave as the default to derive it from the agent ID, or enter a custom key to override it.",
           "timeout": "Set to 0 to disable the response timeout (recommended for long-running requests)"
         }
       },
@@ -26,13 +28,15 @@
           "base_url": "OpenClaw Gateway URL",
           "api_key": "API Token",
           "model": "Model",
+          "agent_id": "OpenClaw agent ID",
           "timeout": "Timeout (seconds, 0 = no limit)",
           "system_prompt": "System prompt",
           "session_key": "OpenClaw session key"
         },
         "data_description": {
+          "agent_id": "Optional OpenClaw agent ID. Leave blank to use the gateway default. If set, the default session key becomes agent:AGENT_ID:home-assistant-assist.",
           "system_prompt": "Instructions sent before each conversation (e.g. keep responses short for voice)",
-          "session_key": "Stable OpenClaw session used for Home Assistant Assist context. To pin to a specific agent, use agent:AGENT_ID:home-assistant-assist.",
+          "session_key": "Stable OpenClaw session used for Home Assistant Assist context. Leave as the default to derive it from the agent ID, or enter a custom key to override it.",
           "timeout": "Set to 0 to disable the response timeout (recommended for long-running requests)"
         }
       }
@@ -56,13 +60,15 @@
         "title": "OpenClaw Conversation Options",
         "data": {
           "model": "Model",
+          "agent_id": "OpenClaw agent ID",
           "timeout": "Timeout (seconds, 0 = no limit)",
           "system_prompt": "System prompt",
           "session_key": "OpenClaw session key",
           "strip_emoji": "Strip emojis from responses"
         },
         "data_description": {
-          "session_key": "Stable OpenClaw session used for Home Assistant Assist context. To pin to a specific agent, use agent:AGENT_ID:home-assistant-assist.",
+          "agent_id": "Optional OpenClaw agent ID. Leave blank to use the gateway default. If set, the default session key becomes agent:AGENT_ID:home-assistant-assist.",
+          "session_key": "Stable OpenClaw session used for Home Assistant Assist context. Leave as the default to derive it from the agent ID, or enter a custom key to override it.",
           "timeout": "Set to 0 to disable the response timeout (recommended for long-running requests)"
         }
       }

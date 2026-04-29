@@ -16,6 +16,7 @@ from homeassistant.core import Context, HomeAssistant
 
 import custom_components.openclaw_conversation.conversation as conversation_module
 from custom_components.openclaw_conversation.const import (
+    CONF_AGENT_ID,
     CONF_API_KEY,
     CONF_BASE_URL,
     CONF_MODEL,
@@ -23,6 +24,7 @@ from custom_components.openclaw_conversation.const import (
     CONF_STRIP_EMOJI,
     CONF_SYSTEM_PROMPT,
     CONF_TIMEOUT,
+    DEFAULT_AGENT_ID,
     DEFAULT_SESSION_KEY,
 )
 from custom_components.openclaw_conversation.conversation import (
@@ -42,6 +44,7 @@ class _Entry:
     }
     options = {
         CONF_MODEL: "openclaw:test",
+        CONF_AGENT_ID: DEFAULT_AGENT_ID,
         CONF_TIMEOUT: 30,
         CONF_SYSTEM_PROMPT: "Be useful.",
         CONF_STRIP_EMOJI: True,
@@ -419,6 +422,7 @@ async def test_call_openclaw_sends_expected_payload(
     assert payload["language"] == "en"
     assert payload["conversation_id"] == DEFAULT_SESSION_KEY
     assert payload["user"] == DEFAULT_SESSION_KEY
+    assert "agent_id" not in payload
     assert payload["user_id"] == "user-1"
     assert payload["device_id"] == "device-1"
     assert isinstance(payload["local_date"], str)
@@ -457,6 +461,46 @@ async def test_call_openclaw_omits_empty_system_prompt(
 
 
 @pytest.mark.asyncio
+async def test_call_openclaw_sends_configured_agent_id(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Pin OpenClaw requests to a configured agent when one is set."""
+    entry = _Entry()
+    entry.options = {**entry.options, CONF_AGENT_ID: "homeops"}
+    session = _Session(_Response(200, '{"choices":[{"message":{"content":"ok"}}]}'))
+    monkeypatch.setattr(
+        conversation_module,
+        "async_get_clientsession",
+        lambda hass: session,
+    )
+    agent = OpenClawConversationAgent(
+        cast(HomeAssistant, _Hass()),
+        cast(ConfigEntry, entry),
+    )
+
+    assert (
+        await agent._call_openclaw(
+            "Hi",
+            {"user_id": "", "device_id": ""},
+            "en",
+        )
+        == "ok"
+    )
+
+    expected_session_key = "agent:homeops:home-assistant-assist"
+    assert session.calls[0]["headers"] == {
+        "Authorization": "Bearer secret",
+        "Content-Type": "application/json",
+        "x-openclaw-session-key": expected_session_key,
+        "x-openclaw-message-channel": "homeassistant",
+    }
+    payload = cast(dict[str, object], session.calls[0]["json"])
+    assert payload["agent_id"] == "homeops"
+    assert payload["conversation_id"] == expected_session_key
+    assert payload["user"] == expected_session_key
+
+
+@pytest.mark.asyncio
 async def test_call_openclaw_raises_for_non_success_response(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -483,5 +527,13 @@ async def test_call_openclaw_raises_for_non_success_response(
 def test_normalize_session_key() -> None:
     """Normalize empty session keys back to the default."""
     assert OpenClawConversationAgent._normalize_session_key(" custom ") == "custom"
+    assert (
+        OpenClawConversationAgent._normalize_session_key(DEFAULT_SESSION_KEY, "homeops")
+        == "agent:homeops:home-assistant-assist"
+    )
+    assert (
+        OpenClawConversationAgent._normalize_session_key(" custom ", "homeops")
+        == "custom"
+    )
     assert OpenClawConversationAgent._normalize_session_key("") == DEFAULT_SESSION_KEY
     assert OpenClawConversationAgent._normalize_session_key(None) == DEFAULT_SESSION_KEY

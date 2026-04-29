@@ -78,8 +78,9 @@ Copy `custom_components/openclaw_conversation` into your HA `config/custom_compo
 | Gateway URL          | `http://<gateway-ip>:<port>` (e.g. `http://192.168.1.100:18789`)                                                                                                                                                                                      |
 | API Token            | Your gateway auth token                                                                                                                                                                                                                               |
 | Model                | `openclaw/default` (default) — must match a model that exists on your gateway                                                                                                                                                                         |
+| OpenClaw agent ID    | Optional. Leave blank to use the gateway default route, or enter an OpenClaw agent ID such as `homeops` to pin Assist to that agent.                                                                                                                  |
 | Timeout              | `30` seconds                                                                                                                                                                                                                                          |
-| OpenClaw session key | `home-assistant-assist` (default) — stable session used to preserve OpenClaw chat context across Assist turns. To pin to a specific OpenClaw agent, use `agent:<agent_id>:home-assistant-assist` (for example `agent:homeops:home-assistant-assist`). |
+| OpenClaw session key | `home-assistant-assist` (default) — stable session used to preserve OpenClaw chat context across Assist turns. Leave as default to derive `agent:<agent_id>:home-assistant-assist` from the agent ID, or enter a custom key to override it.          |
 
 ### 2. Set up a Voice Assistant
 

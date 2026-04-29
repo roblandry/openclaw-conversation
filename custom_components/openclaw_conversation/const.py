@@ -5,12 +5,14 @@ DOMAIN = "openclaw_conversation"
 CONF_BASE_URL = "base_url"
 CONF_API_KEY = "api_key"
 CONF_MODEL = "model"
+CONF_AGENT_ID = "agent_id"
 CONF_TIMEOUT = "timeout"
 CONF_SYSTEM_PROMPT = "system_prompt"
 CONF_STRIP_EMOJI = "strip_emoji"
 CONF_SESSION_KEY = "session_key"
 
 DEFAULT_MODEL = "openclaw/default"
+DEFAULT_AGENT_ID = ""
 DEFAULT_TIMEOUT = 0
 DEFAULT_STRIP_EMOJI = True
 DEFAULT_SESSION_KEY = "home-assistant-assist"

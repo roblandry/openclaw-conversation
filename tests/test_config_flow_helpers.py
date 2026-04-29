@@ -26,6 +26,7 @@ from custom_components.openclaw_conversation.config_flow import (
     _validation_timeout_from_options,
 )
 from custom_components.openclaw_conversation.const import (
+    CONF_AGENT_ID,
     CONF_API_KEY,
     CONF_BASE_URL,
     CONF_MODEL,
@@ -33,6 +34,7 @@ from custom_components.openclaw_conversation.const import (
     CONF_STRIP_EMOJI,
     CONF_SYSTEM_PROMPT,
     CONF_TIMEOUT,
+    DEFAULT_AGENT_ID,
     DEFAULT_MODEL,
     DEFAULT_SESSION_KEY,
     DEFAULT_STRIP_EMOJI,
@@ -50,6 +52,7 @@ class _Entry:
     }
     options = {
         CONF_MODEL: "option-model",
+        CONF_AGENT_ID: DEFAULT_AGENT_ID,
         CONF_TIMEOUT: 12,
         CONF_SYSTEM_PROMPT: "Option prompt",
         CONF_STRIP_EMOJI: False,
@@ -279,6 +282,7 @@ def test_options_from_user_input() -> None:
     options = _options_from_user_input(
         {
             CONF_MODEL: "openclaw:other",
+            CONF_AGENT_ID: "homeops",
             CONF_TIMEOUT: 45,
             CONF_SYSTEM_PROMPT: "Be concise.",
             CONF_SESSION_KEY: "home-assistant-custom",
@@ -287,6 +291,7 @@ def test_options_from_user_input() -> None:
 
     assert options == {
         CONF_MODEL: "openclaw:other",
+        CONF_AGENT_ID: "homeops",
         CONF_TIMEOUT: 45,
         CONF_SYSTEM_PROMPT: "Be concise.",
         CONF_STRIP_EMOJI: DEFAULT_STRIP_EMOJI,
@@ -323,6 +328,7 @@ def test_build_data_schema_applies_setup_defaults() -> None:
         CONF_BASE_URL: "http://localhost:18789/",
         CONF_API_KEY: "secret",
         CONF_MODEL: DEFAULT_MODEL,
+        CONF_AGENT_ID: DEFAULT_AGENT_ID,
         CONF_TIMEOUT: 0,
         CONF_SYSTEM_PROMPT: DEFAULT_SYSTEM_PROMPT,
         CONF_SESSION_KEY: DEFAULT_SESSION_KEY,
@@ -336,6 +342,7 @@ def test_build_data_schema_uses_reconfigure_defaults() -> None:
         base_url="http://old-host:18789",
         api_key="old-secret",
         model="openclaw:old",
+        agent_id="homeops",
         timeout=30,
         system_prompt="Old prompt",
         session_key="home-assistant-old",
@@ -347,6 +354,7 @@ def test_build_data_schema_uses_reconfigure_defaults() -> None:
         CONF_BASE_URL: "http://old-host:18789",
         CONF_API_KEY: "old-secret",
         CONF_MODEL: "openclaw:old",
+        CONF_AGENT_ID: "homeops",
         CONF_TIMEOUT: 30,
         CONF_SYSTEM_PROMPT: "Old prompt",
         CONF_SESSION_KEY: "home-assistant-old",
@@ -379,6 +387,7 @@ async def test_options_flow_shows_existing_values() -> None:
     schema = cast(vol.Schema, result["data_schema"])
     assert schema({}) == {
         CONF_MODEL: "option-model",
+        CONF_AGENT_ID: DEFAULT_AGENT_ID,
         CONF_TIMEOUT: 12,
         CONF_SYSTEM_PROMPT: "Option prompt",
         CONF_SESSION_KEY: DEFAULT_SESSION_KEY,
@@ -409,6 +418,7 @@ async def test_options_flow_creates_entry_with_defaults() -> None:
     assert result["title"] == ""
     assert result["data"] == {
         CONF_MODEL: "openclaw:new",
+        CONF_AGENT_ID: DEFAULT_AGENT_ID,
         CONF_TIMEOUT: 0,
         CONF_SYSTEM_PROMPT: DEFAULT_SYSTEM_PROMPT,
         CONF_STRIP_EMOJI: True,
@@ -441,6 +451,7 @@ async def test_user_step_creates_entry() -> None:
                 CONF_BASE_URL: "http://localhost:18789/",
                 CONF_API_KEY: "secret",
                 CONF_MODEL: "openclaw:new",
+                CONF_AGENT_ID: "homeops",
                 CONF_TIMEOUT: 22,
                 CONF_SYSTEM_PROMPT: "Be brief.",
             }
@@ -455,6 +466,7 @@ async def test_user_step_creates_entry() -> None:
     }
     assert result["options"] == {
         CONF_MODEL: "openclaw:new",
+        CONF_AGENT_ID: "homeops",
         CONF_TIMEOUT: 22,
         CONF_SYSTEM_PROMPT: "Be brief.",
         CONF_STRIP_EMOJI: True,
@@ -496,6 +508,7 @@ async def test_reconfigure_step_shows_existing_values() -> None:
         CONF_BASE_URL: "http://localhost:18789",
         CONF_API_KEY: "secret",
         CONF_MODEL: "option-model",
+        CONF_AGENT_ID: DEFAULT_AGENT_ID,
         CONF_TIMEOUT: 12,
         CONF_SYSTEM_PROMPT: "Option prompt",
         CONF_SESSION_KEY: DEFAULT_SESSION_KEY,
@@ -533,6 +546,7 @@ async def test_reconfigure_step_updates_entry() -> None:
                 CONF_BASE_URL: "http://new-host:18789/",
                 CONF_API_KEY: "new-secret",
                 CONF_MODEL: "openclaw:new",
+                CONF_AGENT_ID: "homeops",
                 CONF_TIMEOUT: 44,
                 CONF_SYSTEM_PROMPT: "New prompt",
             }
@@ -549,6 +563,7 @@ async def test_reconfigure_step_updates_entry() -> None:
         },
         "options": {
             CONF_MODEL: "openclaw:new",
+            CONF_AGENT_ID: "homeops",
             CONF_TIMEOUT: 44,
             CONF_SYSTEM_PROMPT: "New prompt",
             CONF_STRIP_EMOJI: True,
@@ -587,6 +602,29 @@ async def test_validate_connection_success(monkeypatch: pytest.MonkeyPatch) -> N
         "Content-Type": "application/json",
     }
     assert cast(aiohttp.ClientTimeout, session.calls[0]["timeout"]).total == 120
+
+
+@pytest.mark.asyncio
+async def test_validate_connection_sends_agent_id_when_configured(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Include a configured OpenClaw agent id in setup validation."""
+    flow = OpenClawConversationConfigFlow()
+    flow.hass = cast(HomeAssistant, object())
+    session = _Session(_Response(200))
+    monkeypatch.setattr(
+        config_flow_module,
+        "async_get_clientsession",
+        lambda hass: session,
+    )
+
+    result = await flow._async_validate_connection(
+        {CONF_BASE_URL: "http://localhost:18789", CONF_API_KEY: "secret"},
+        {CONF_MODEL: "openclaw:test", CONF_AGENT_ID: "homeops"},
+    )
+
+    assert result == {}
+    assert cast(dict[str, object], session.calls[0]["json"])["agent_id"] == "homeops"
 
 
 @pytest.mark.parametrize(

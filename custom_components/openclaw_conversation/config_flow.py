@@ -23,6 +23,7 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import (
+    CONF_AGENT_ID,
     CONF_API_KEY,
     CONF_BASE_URL,
     CONF_MODEL,
@@ -30,6 +31,7 @@ from .const import (
     CONF_STRIP_EMOJI,
     CONF_SYSTEM_PROMPT,
     CONF_TIMEOUT,
+    DEFAULT_AGENT_ID,
     DEFAULT_BASE_URL,
     DEFAULT_MODEL,
     DEFAULT_SESSION_KEY,
@@ -110,6 +112,7 @@ def _options_from_user_input(user_input: dict[str, Any]) -> dict[str, Any]:
     """Return configurable OpenClaw behavior options."""
     return {
         CONF_MODEL: user_input.get(CONF_MODEL, DEFAULT_MODEL),
+        CONF_AGENT_ID: str(user_input.get(CONF_AGENT_ID, DEFAULT_AGENT_ID)).strip(),
         CONF_TIMEOUT: user_input.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
         CONF_SYSTEM_PROMPT: user_input.get(CONF_SYSTEM_PROMPT, DEFAULT_SYSTEM_PROMPT),
         CONF_STRIP_EMOJI: user_input.get(CONF_STRIP_EMOJI, DEFAULT_STRIP_EMOJI),
@@ -137,6 +140,7 @@ def _build_data_schema(
     base_url: str = DEFAULT_BASE_URL,
     api_key: str | None = None,
     model: str = DEFAULT_MODEL,
+    agent_id: str = DEFAULT_AGENT_ID,
     timeout: int = DEFAULT_TIMEOUT,
     system_prompt: str = DEFAULT_SYSTEM_PROMPT,
     session_key: str = DEFAULT_SESSION_KEY,
@@ -162,6 +166,10 @@ def _build_data_schema(
                 TextSelectorConfig(type=TextSelectorType.PASSWORD)
             ),
             vol.Optional(CONF_MODEL, default=model): str,
+            vol.Optional(
+                CONF_AGENT_ID,
+                default=agent_id,
+            ): _text_selector(TextSelectorConfig(type=TextSelectorType.TEXT)),
             vol.Optional(CONF_TIMEOUT, default=timeout): vol.All(
                 _number_selector(
                     NumberSelectorConfig(
@@ -257,6 +265,7 @@ class OpenClawConversationConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 base_url=config.get(CONF_BASE_URL, DEFAULT_BASE_URL),
                 api_key=config.get(CONF_API_KEY),
                 model=config.get(CONF_MODEL, DEFAULT_MODEL),
+                agent_id=config.get(CONF_AGENT_ID, DEFAULT_AGENT_ID),
                 timeout=config.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
                 system_prompt=config.get(CONF_SYSTEM_PROMPT, DEFAULT_SYSTEM_PROMPT),
                 session_key=config.get(CONF_SESSION_KEY, DEFAULT_SESSION_KEY),
@@ -285,6 +294,8 @@ class OpenClawConversationConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 "stream": False,
                 "max_tokens": 1,
             }
+            if agent_id := options.get(CONF_AGENT_ID):
+                payload["agent_id"] = agent_id
             validation_timeout = _validation_timeout_from_options(options)
             _LOGGER.debug(
                 "Validating OpenClaw Gateway: POST %s (model=%s, timeout=%ss)",
@@ -360,6 +371,10 @@ class OpenClawOptionsFlowHandler(config_entries.OptionsFlow):
                         CONF_MODEL,
                         default=config.get(CONF_MODEL, DEFAULT_MODEL),
                     ): str,
+                    vol.Optional(
+                        CONF_AGENT_ID,
+                        default=config.get(CONF_AGENT_ID, DEFAULT_AGENT_ID),
+                    ): _text_selector(TextSelectorConfig(type=TextSelectorType.TEXT)),
                     vol.Optional(
                         CONF_TIMEOUT,
                         default=config.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
