@@ -1,6 +1,10 @@
 # OpenClaw Conversation for Home Assistant
 
-> ⚠️ **This project is no longer actively maintained (as of April 2026).**
+> **Fork note:** this fork is maintained for Rob's Home Assistant/OpenClaw setup
+> and is being brought up to current Home Assistant custom integration
+> standards.
+>
+> The upstream project is no longer actively maintained as of April 2026.
 >
 > I am not using OpenClaw myself anymore, so I won't be shipping new fixes or features here going forward. The code as of **v0.4.2** is stable and works for the setups it was tested against, but new issues and pull requests will not be actively worked on from my side.
 >
@@ -9,8 +13,8 @@
 > Thanks to everyone who used, tested, and reported issues on this project 🙏
 
 [![HACS](https://img.shields.io/badge/HACS-Custom-orange?style=flat-square)](https://hacs.xyz/)
-[![GitHub Release](https://img.shields.io/github/v/release/nicolasglg/openclaw-conversation?style=flat-square)](https://github.com/nicolasglg/openclaw-conversation/releases)
-[![License](https://img.shields.io/github/license/nicolasglg/openclaw-conversation?style=flat-square)](LICENSE)
+[![GitHub Release](https://img.shields.io/github/v/release/roblandry/openclaw-conversation?style=flat-square)](https://github.com/roblandry/openclaw-conversation/releases)
+[![License](https://img.shields.io/github/license/roblandry/openclaw-conversation?style=flat-square)](LICENSE)
 [![Buy Me A Beer](https://img.shields.io/badge/Buy%20Me%20A%20Beer-support-yellow?style=flat-square&logo=buy-me-a-coffee)](https://buymeacoffee.com/nicolasglg)
 
 **Turn your [OpenClaw](https://openclaw.ai) agent into a Home Assistant voice assistant.**
@@ -53,7 +57,7 @@ Say a wake word, ask a question, get a spoken answer — powered by your own Ope
 
 1. Open HACS in Home Assistant
 2. Click the 3 dots menu > **Custom repositories**
-3. Add `nicolasglg/openclaw-conversation` as **Integration**
+3. Add `roblandry/openclaw-conversation` as **Integration**
 4. Search for and install **OpenClaw Conversation**
 5. Restart Home Assistant
 6. Go to **Settings** > **Integrations** > **Add Integration** > **OpenClaw Conversation**
@@ -73,7 +77,7 @@ Copy `custom_components/openclaw_conversation` into your HA `config/custom_compo
 | Name | Display name (e.g. "OpenClaw") |
 | Gateway URL | `http://<gateway-ip>:<port>` (e.g. `http://192.168.1.100:18789`) |
 | API Token | Your gateway auth token |
-| Model | `openclaw:main` (default) — must match a model that exists on your gateway |
+| Model | `openclaw/default` (default) — must match a model that exists on your gateway |
 | Timeout | `30` seconds |
 
 ### 2. Set up a Voice Assistant
@@ -161,7 +165,7 @@ OpenClaw backends that understand these fields can use them for routing or sessi
 | Problem | Fix |
 |---------|-----|
 | Cannot connect to gateway | Check URL: `curl http://<ip>:<port>/v1/chat/completions`. Check firewall. Don't use `127.0.0.1` across machines. |
-| Model not available | The model name you configured does not exist on your OpenClaw Gateway. Try `openclaw:main` or list the models your gateway exposes. |
+| Model not available | The model name you configured does not exist on your OpenClaw Gateway. Try `openclaw/default` or list the models your gateway exposes. |
 | Endpoint disabled (405) | Enable `chatCompletions` in `openclaw.json`, restart gateway |
 | Invalid auth (401) | Check token. Ensure `gateway.auth.mode` is `"token"` |
 | `No response from OpenClaw` / empty stream / `data: [DONE]` | The gateway opened the stream but never produced a response before closing it. Usually a timeout on the gateway side. Add `agents.defaults.llm.idleTimeoutSeconds: 180` to your `openclaw.json` and restart the gateway. |
