@@ -3,7 +3,7 @@
 > **Fork note:** this fork is maintained for Rob's Home Assistant/OpenClaw setup
 > and is being brought up to current Home Assistant custom integration
 > standards.
->
+
 > The upstream project is no longer actively maintained as of April 2026.
 >
 > I am not using OpenClaw myself anymore, so I won't be shipping new fixes or features here going forward. The code as of **v0.4.2** is stable and works for the setups it was tested against, but new issues and pull requests will not be actively worked on from my side.
@@ -15,7 +15,7 @@
 [![HACS](https://img.shields.io/badge/HACS-Custom-orange?style=flat-square)](https://hacs.xyz/)
 [![GitHub Release](https://img.shields.io/github/v/release/roblandry/openclaw-conversation?style=flat-square)](https://github.com/roblandry/openclaw-conversation/releases)
 [![License](https://img.shields.io/github/license/roblandry/openclaw-conversation?style=flat-square)](LICENSE)
-[![Buy Me A Beer](https://img.shields.io/badge/Buy%20Me%20A%20Beer-support-yellow?style=flat-square&logo=buy-me-a-coffee)](https://buymeacoffee.com/nicolasglg)
+[![Buy Me A Beer](https://img.shields.io/badge/Buy%20Me%20A%20Beer-support-yellow?style=flat-square&logo=buy-me-a-coffee)](https://buymeacoffee.com/roblandry)
 
 **Turn your [OpenClaw](https://openclaw.ai) agent into a Home Assistant voice assistant.**
 
@@ -72,13 +72,14 @@ Copy `custom_components/openclaw_conversation` into your HA `config/custom_compo
 
 **Settings > Devices & Services > Add Integration > OpenClaw Conversation**
 
-| Field | Value |
-|-------|-------|
-| Name | Display name (e.g. "OpenClaw") |
-| Gateway URL | `http://<gateway-ip>:<port>` (e.g. `http://192.168.1.100:18789`) |
-| API Token | Your gateway auth token |
-| Model | `openclaw/default` (default) — must match a model that exists on your gateway |
-| Timeout | `30` seconds |
+| Field                | Value                                                                                                                                                                                                                                                 |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Name                 | Display name (e.g. "OpenClaw")                                                                                                                                                                                                                        |
+| Gateway URL          | `http://<gateway-ip>:<port>` (e.g. `http://192.168.1.100:18789`)                                                                                                                                                                                      |
+| API Token            | Your gateway auth token                                                                                                                                                                                                                               |
+| Model                | `openclaw/default` (default) — must match a model that exists on your gateway                                                                                                                                                                         |
+| Timeout              | `30` seconds                                                                                                                                                                                                                                          |
+| OpenClaw session key | `home-assistant-assist` (default) — stable session used to preserve OpenClaw chat context across Assist turns. To pin to a specific OpenClaw agent, use `agent:<agent_id>:home-assistant-assist` (for example `agent:homeops:home-assistant-assist`). |
 
 ### 2. Set up a Voice Assistant
 
@@ -144,33 +145,33 @@ OpenClaw backends that understand these fields can use them for routing or sessi
 
 ### Speech-to-Text
 
-| Engine | Speed | Notes |
-|--------|-------|-------|
-| **HA Cloud** | Fast | Requires subscription |
-| **Faster Whisper** (Wyoming) | Good | Separate machine with decent CPU/GPU |
-| **Whisper** (local add-on) | Slow on weak HW | Not ideal on HA Green / Pi |
+| Engine                       | Speed           | Notes                                |
+| ---------------------------- | --------------- | ------------------------------------ |
+| **HA Cloud**                 | Fast            | Requires subscription                |
+| **Faster Whisper** (Wyoming) | Good            | Separate machine with decent CPU/GPU |
+| **Whisper** (local add-on)   | Slow on weak HW | Not ideal on HA Green / Pi           |
 
 ### Text-to-Speech
 
-| Engine | Quality | Notes |
-|--------|---------|-------|
-| **Piper** (local) | Good, natural | Lightweight, runs anywhere |
-| **HA Cloud** | Excellent | Requires subscription |
-| **Google Translate TTS** | Decent | Needs internet |
+| Engine                   | Quality       | Notes                      |
+| ------------------------ | ------------- | -------------------------- |
+| **Piper** (local)        | Good, natural | Lightweight, runs anywhere |
+| **HA Cloud**             | Excellent     | Requires subscription      |
+| **Google Translate TTS** | Decent        | Needs internet             |
 
 > **Tip**: On HA Green or Raspberry Pi, local Whisper will be slow. Use Faster Whisper on a separate machine or HA Cloud.
 
 ## Troubleshooting
 
-| Problem | Fix |
-|---------|-----|
-| Cannot connect to gateway | Check URL: `curl http://<ip>:<port>/v1/chat/completions`. Check firewall. Don't use `127.0.0.1` across machines. |
-| Model not available | The model name you configured does not exist on your OpenClaw Gateway. Try `openclaw/default` or list the models your gateway exposes. |
-| Endpoint disabled (405) | Enable `chatCompletions` in `openclaw.json`, restart gateway |
-| Invalid auth (401) | Check token. Ensure `gateway.auth.mode` is `"token"` |
+| Problem                                                     | Fix                                                                                                                                                                                                                      |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Cannot connect to gateway                                   | Check URL: `curl http://<ip>:<port>/v1/chat/completions`. Check firewall. Don't use `127.0.0.1` across machines.                                                                                                         |
+| Model not available                                         | The model name you configured does not exist on your OpenClaw Gateway. Try `openclaw/default` or list the models your gateway exposes.                                                                                   |
+| Endpoint disabled (405)                                     | Enable `chatCompletions` in `openclaw.json`, restart gateway                                                                                                                                                             |
+| Invalid auth (401)                                          | Check token. Ensure `gateway.auth.mode` is `"token"`                                                                                                                                                                     |
 | `No response from OpenClaw` / empty stream / `data: [DONE]` | The gateway opened the stream but never produced a response before closing it. Usually a timeout on the gateway side. Add `agents.defaults.llm.idleTimeoutSeconds: 180` to your `openclaw.json` and restart the gateway. |
-| Red flashing light (Voice PE) | STT failed — check your STT engine config |
-| Agent not in dropdown | Restart HA after installing. Check logs for errors |
+| Red flashing light (Voice PE)                               | STT failed — check your STT engine config                                                                                                                                                                                |
+| Agent not in dropdown                                       | Restart HA after installing. Check logs for errors                                                                                                                                                                       |
 
 ## Known limitations
 

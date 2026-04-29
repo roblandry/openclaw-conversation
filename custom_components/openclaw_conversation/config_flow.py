@@ -26,11 +26,13 @@ from .const import (
     CONF_API_KEY,
     CONF_BASE_URL,
     CONF_MODEL,
+    CONF_SESSION_KEY,
     CONF_STRIP_EMOJI,
     CONF_SYSTEM_PROMPT,
     CONF_TIMEOUT,
     DEFAULT_BASE_URL,
     DEFAULT_MODEL,
+    DEFAULT_SESSION_KEY,
     DEFAULT_STRIP_EMOJI,
     DEFAULT_SYSTEM_PROMPT,
     DEFAULT_TIMEOUT,
@@ -111,6 +113,9 @@ def _options_from_user_input(user_input: dict[str, Any]) -> dict[str, Any]:
         CONF_TIMEOUT: user_input.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
         CONF_SYSTEM_PROMPT: user_input.get(CONF_SYSTEM_PROMPT, DEFAULT_SYSTEM_PROMPT),
         CONF_STRIP_EMOJI: user_input.get(CONF_STRIP_EMOJI, DEFAULT_STRIP_EMOJI),
+        CONF_SESSION_KEY: str(
+            user_input.get(CONF_SESSION_KEY, DEFAULT_SESSION_KEY)
+        ).strip(),
     }
 
 
@@ -134,6 +139,7 @@ def _build_data_schema(
     model: str = DEFAULT_MODEL,
     timeout: int = DEFAULT_TIMEOUT,
     system_prompt: str = DEFAULT_SYSTEM_PROMPT,
+    session_key: str = DEFAULT_SESSION_KEY,
     include_name: bool = True,
 ) -> vol.Schema:
     """Build the shared config flow form schema."""
@@ -170,6 +176,10 @@ def _build_data_schema(
                 CONF_SYSTEM_PROMPT,
                 default=system_prompt,
             ): _text_selector(TextSelectorConfig(multiline=True)),
+            vol.Optional(
+                CONF_SESSION_KEY,
+                default=session_key,
+            ): _text_selector(TextSelectorConfig(type=TextSelectorType.TEXT)),
         }
     )
     return vol.Schema(schema)
@@ -249,6 +259,7 @@ class OpenClawConversationConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 model=config.get(CONF_MODEL, DEFAULT_MODEL),
                 timeout=config.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
                 system_prompt=config.get(CONF_SYSTEM_PROMPT, DEFAULT_SYSTEM_PROMPT),
+                session_key=config.get(CONF_SESSION_KEY, DEFAULT_SESSION_KEY),
                 include_name=False,
             ),
             errors=errors,
@@ -366,6 +377,10 @@ class OpenClawOptionsFlowHandler(config_entries.OptionsFlow):
                         CONF_SYSTEM_PROMPT,
                         default=config.get(CONF_SYSTEM_PROMPT, DEFAULT_SYSTEM_PROMPT),
                     ): _text_selector(TextSelectorConfig(multiline=True)),
+                    vol.Optional(
+                        CONF_SESSION_KEY,
+                        default=config.get(CONF_SESSION_KEY, DEFAULT_SESSION_KEY),
+                    ): _text_selector(TextSelectorConfig(type=TextSelectorType.TEXT)),
                     vol.Optional(
                         CONF_STRIP_EMOJI,
                         default=config.get(CONF_STRIP_EMOJI, DEFAULT_STRIP_EMOJI),

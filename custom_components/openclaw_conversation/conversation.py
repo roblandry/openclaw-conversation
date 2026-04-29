@@ -31,10 +31,12 @@ from .const import (
     CONF_API_KEY,
     CONF_BASE_URL,
     CONF_MODEL,
+    CONF_SESSION_KEY,
     CONF_STRIP_EMOJI,
     CONF_SYSTEM_PROMPT,
     CONF_TIMEOUT,
     DEFAULT_MODEL,
+    DEFAULT_SESSION_KEY,
     DEFAULT_STRIP_EMOJI,
     DEFAULT_SYSTEM_PROMPT,
     DEFAULT_TIMEOUT,
@@ -185,6 +187,9 @@ class OpenClawConversationAgent(AbstractConversationAgent):
         )
         self._system_prompt = config.get(CONF_SYSTEM_PROMPT, DEFAULT_SYSTEM_PROMPT)
         self._strip_emoji = config.get(CONF_STRIP_EMOJI, DEFAULT_STRIP_EMOJI)
+        self._session_key = self._normalize_session_key(
+            config.get(CONF_SESSION_KEY, DEFAULT_SESSION_KEY)
+        )
 
     @property
     def attribution(self) -> dict[str, str]:
@@ -205,7 +210,6 @@ class OpenClawConversationAgent(AbstractConversationAgent):
             start = time.monotonic()
             response_text = await self._call_openclaw(
                 user_input.text,
-                conversation_id,
                 principal,
                 user_input.language,
             )
@@ -268,6 +272,13 @@ class OpenClawConversationAgent(AbstractConversationAgent):
         }
 
     @staticmethod
+    def _normalize_session_key(value: object) -> str:
+        """Normalize the configured OpenClaw session key."""
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+        return DEFAULT_SESSION_KEY
+
+    @staticmethod
     def _normalize_timeout(value: Any) -> int:
         """Normalize the configured timeout to a non-negative integer."""
         try:
@@ -297,7 +308,6 @@ class OpenClawConversationAgent(AbstractConversationAgent):
     async def _call_openclaw(
         self,
         text: str,
-        conversation_id: str,
         principal: dict[str, str],
         language: str,
     ) -> str:
@@ -305,6 +315,8 @@ class OpenClawConversationAgent(AbstractConversationAgent):
         headers = {
             "Authorization": f"Bearer {self._api_key}",
             "Content-Type": "application/json",
+            "x-openclaw-session-key": self._session_key,
+            "x-openclaw-message-channel": "homeassistant",
         }
 
         api_messages: list[ChatMessage] = []
@@ -318,7 +330,8 @@ class OpenClawConversationAgent(AbstractConversationAgent):
             "stream": True,
             "language": language,
             "local_date": dt_util.now().date().isoformat(),
-            "conversation_id": conversation_id,
+            "conversation_id": self._session_key,
+            "user": self._session_key,
             "user_id": principal["user_id"],
             "device_id": principal["device_id"],
         }

@@ -29,10 +29,12 @@ from custom_components.openclaw_conversation.const import (
     CONF_API_KEY,
     CONF_BASE_URL,
     CONF_MODEL,
+    CONF_SESSION_KEY,
     CONF_STRIP_EMOJI,
     CONF_SYSTEM_PROMPT,
     CONF_TIMEOUT,
     DEFAULT_MODEL,
+    DEFAULT_SESSION_KEY,
     DEFAULT_STRIP_EMOJI,
     DEFAULT_SYSTEM_PROMPT,
 )
@@ -51,6 +53,7 @@ class _Entry:
         CONF_TIMEOUT: 12,
         CONF_SYSTEM_PROMPT: "Option prompt",
         CONF_STRIP_EMOJI: False,
+        CONF_SESSION_KEY: DEFAULT_SESSION_KEY,
     }
 
 
@@ -278,6 +281,7 @@ def test_options_from_user_input() -> None:
             CONF_MODEL: "openclaw:other",
             CONF_TIMEOUT: 45,
             CONF_SYSTEM_PROMPT: "Be concise.",
+            CONF_SESSION_KEY: "home-assistant-custom",
         }
     )
 
@@ -286,6 +290,7 @@ def test_options_from_user_input() -> None:
         CONF_TIMEOUT: 45,
         CONF_SYSTEM_PROMPT: "Be concise.",
         CONF_STRIP_EMOJI: DEFAULT_STRIP_EMOJI,
+        CONF_SESSION_KEY: "home-assistant-custom",
     }
 
 
@@ -320,6 +325,7 @@ def test_build_data_schema_applies_setup_defaults() -> None:
         CONF_MODEL: DEFAULT_MODEL,
         CONF_TIMEOUT: 0,
         CONF_SYSTEM_PROMPT: DEFAULT_SYSTEM_PROMPT,
+        CONF_SESSION_KEY: DEFAULT_SESSION_KEY,
     }
 
 
@@ -332,6 +338,7 @@ def test_build_data_schema_uses_reconfigure_defaults() -> None:
         model="openclaw:old",
         timeout=30,
         system_prompt="Old prompt",
+        session_key="home-assistant-old",
     )
 
     data = schema({})
@@ -342,6 +349,7 @@ def test_build_data_schema_uses_reconfigure_defaults() -> None:
         CONF_MODEL: "openclaw:old",
         CONF_TIMEOUT: 30,
         CONF_SYSTEM_PROMPT: "Old prompt",
+        CONF_SESSION_KEY: "home-assistant-old",
     }
 
 
@@ -373,6 +381,7 @@ async def test_options_flow_shows_existing_values() -> None:
         CONF_MODEL: "option-model",
         CONF_TIMEOUT: 12,
         CONF_SYSTEM_PROMPT: "Option prompt",
+        CONF_SESSION_KEY: DEFAULT_SESSION_KEY,
         CONF_STRIP_EMOJI: False,
     }
 
@@ -403,6 +412,7 @@ async def test_options_flow_creates_entry_with_defaults() -> None:
         CONF_TIMEOUT: 0,
         CONF_SYSTEM_PROMPT: DEFAULT_SYSTEM_PROMPT,
         CONF_STRIP_EMOJI: True,
+        CONF_SESSION_KEY: DEFAULT_SESSION_KEY,
     }
 
 
@@ -448,6 +458,7 @@ async def test_user_step_creates_entry() -> None:
         CONF_TIMEOUT: 22,
         CONF_SYSTEM_PROMPT: "Be brief.",
         CONF_STRIP_EMOJI: True,
+        CONF_SESSION_KEY: DEFAULT_SESSION_KEY,
     }
     assert flow.unique_ids == ["http://localhost:18789"]
 
@@ -487,6 +498,7 @@ async def test_reconfigure_step_shows_existing_values() -> None:
         CONF_MODEL: "option-model",
         CONF_TIMEOUT: 12,
         CONF_SYSTEM_PROMPT: "Option prompt",
+        CONF_SESSION_KEY: DEFAULT_SESSION_KEY,
     }
 
 
@@ -540,6 +552,7 @@ async def test_reconfigure_step_updates_entry() -> None:
             CONF_TIMEOUT: 44,
             CONF_SYSTEM_PROMPT: "New prompt",
             CONF_STRIP_EMOJI: True,
+            CONF_SESSION_KEY: DEFAULT_SESSION_KEY,
         },
     }
 

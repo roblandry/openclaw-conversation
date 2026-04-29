@@ -10,10 +10,12 @@
           "api_key": "API Token",
           "model": "Model",
           "timeout": "Timeout (seconds, 0 = no limit)",
-          "system_prompt": "System prompt"
+          "system_prompt": "System prompt",
+          "session_key": "OpenClaw session key"
         },
         "data_description": {
           "system_prompt": "Instructions sent before each conversation (e.g. keep responses short for voice)",
+          "session_key": "Stable OpenClaw session used for Home Assistant Assist context. To pin to a specific agent, use agent:<agent_id>:home-assistant-assist.",
           "timeout": "Set to 0 to disable the response timeout (recommended for long-running requests)"
         }
       },
@@ -25,10 +27,12 @@
           "api_key": "API Token",
           "model": "Model",
           "timeout": "Timeout (seconds, 0 = no limit)",
-          "system_prompt": "System prompt"
+          "system_prompt": "System prompt",
+          "session_key": "OpenClaw session key"
         },
         "data_description": {
           "system_prompt": "Instructions sent before each conversation (e.g. keep responses short for voice)",
+          "session_key": "Stable OpenClaw session used for Home Assistant Assist context. To pin to a specific agent, use agent:<agent_id>:home-assistant-assist.",
           "timeout": "Set to 0 to disable the response timeout (recommended for long-running requests)"
         }
       }
@@ -54,9 +58,11 @@
           "model": "Model",
           "timeout": "Timeout (seconds, 0 = no limit)",
           "system_prompt": "System prompt",
+          "session_key": "OpenClaw session key",
           "strip_emoji": "Strip emojis from responses"
         },
         "data_description": {
+          "session_key": "Stable OpenClaw session used for Home Assistant Assist context. To pin to a specific agent, use agent:<agent_id>:home-assistant-assist.",
           "timeout": "Set to 0 to disable the response timeout (recommended for long-running requests)"
         }
       }

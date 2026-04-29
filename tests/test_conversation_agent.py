@@ -19,9 +19,11 @@ from custom_components.openclaw_conversation.const import (
     CONF_API_KEY,
     CONF_BASE_URL,
     CONF_MODEL,
+    CONF_SESSION_KEY,
     CONF_STRIP_EMOJI,
     CONF_SYSTEM_PROMPT,
     CONF_TIMEOUT,
+    DEFAULT_SESSION_KEY,
 )
 from custom_components.openclaw_conversation.conversation import (
     GENERIC_ERROR_RESPONSE,
@@ -43,6 +45,7 @@ class _Entry:
         CONF_TIMEOUT: 30,
         CONF_SYSTEM_PROMPT: "Be useful.",
         CONF_STRIP_EMOJI: True,
+        CONF_SESSION_KEY: DEFAULT_SESSION_KEY,
     }
 
 
@@ -63,7 +66,6 @@ class _Agent(OpenClawConversationAgent):
     async def _call_openclaw(
         self,
         text: str,
-        conversation_id: str,
         principal: dict[str, str],
         language: str,
     ) -> str:
@@ -71,7 +73,7 @@ class _Agent(OpenClawConversationAgent):
         self.calls.append(
             {
                 "text": text,
-                "conversation_id": conversation_id,
+                "session_key": self._session_key,
                 "principal": principal,
                 "language": language,
             }
@@ -232,7 +234,7 @@ async def test_async_process_returns_response_and_records_chat_log() -> None:
     assert agent.calls == [
         {
             "text": "Turn on the kitchen lights",
-            "conversation_id": "conversation-1",
+            "session_key": DEFAULT_SESSION_KEY,
             "principal": {"user_id": "user-1", "device_id": "device-1"},
             "language": "en",
         }
@@ -248,7 +250,7 @@ async def test_async_process_generates_conversation_id() -> None:
     result = await agent.async_process(_conversation_input(conversation_id=None))
 
     assert result.conversation_id
-    assert agent.calls[0]["conversation_id"] == result.conversation_id
+    assert agent.calls[0]["session_key"] == DEFAULT_SESSION_KEY
     assert agent.chat_log == [(result.conversation_id, "Done")]
 
 
@@ -393,7 +395,6 @@ async def test_call_openclaw_sends_expected_payload(
 
     result = await agent._call_openclaw(
         "Hi",
-        "conversation-1",
         {"user_id": "user-1", "device_id": "device-1"},
         "en",
     )
@@ -405,6 +406,8 @@ async def test_call_openclaw_sends_expected_payload(
     assert session.calls[0]["headers"] == {
         "Authorization": "Bearer secret",
         "Content-Type": "application/json",
+        "x-openclaw-session-key": DEFAULT_SESSION_KEY,
+        "x-openclaw-message-channel": "homeassistant",
     }
     payload = cast(dict[str, object], session.calls[0]["json"])
     assert payload["model"] == "openclaw:test"
@@ -414,7 +417,8 @@ async def test_call_openclaw_sends_expected_payload(
     ]
     assert payload["stream"] is True
     assert payload["language"] == "en"
-    assert payload["conversation_id"] == "conversation-1"
+    assert payload["conversation_id"] == DEFAULT_SESSION_KEY
+    assert payload["user"] == DEFAULT_SESSION_KEY
     assert payload["user_id"] == "user-1"
     assert payload["device_id"] == "device-1"
     assert isinstance(payload["local_date"], str)
@@ -442,7 +446,6 @@ async def test_call_openclaw_omits_empty_system_prompt(
     assert (
         await agent._call_openclaw(
             "Hi",
-            "conversation-1",
             {"user_id": "", "device_id": ""},
             "en",
         )
@@ -472,7 +475,13 @@ async def test_call_openclaw_raises_for_non_success_response(
     with pytest.raises(RuntimeError, match=f"OpenClaw returned 500: {'x' * 200}"):
         await agent._call_openclaw(
             "Hi",
-            "conversation-1",
             {"user_id": "", "device_id": ""},
             "en",
         )
+
+
+def test_normalize_session_key() -> None:
+    """Normalize empty session keys back to the default."""
+    assert OpenClawConversationAgent._normalize_session_key(" custom ") == "custom"
+    assert OpenClawConversationAgent._normalize_session_key("") == DEFAULT_SESSION_KEY
+    assert OpenClawConversationAgent._normalize_session_key(None) == DEFAULT_SESSION_KEY
