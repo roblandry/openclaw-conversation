@@ -1,0 +1,103 @@
+name: Prepare Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to write to manifest.json, e.g. 0.4.3"
+        required: true
+        type: string
+      create_tag:
+        description: "Create and push the matching v<version> tag"
+        default: false
+        required: true
+        type: boolean
+
+permissions:
+  contents: write
+
+env:
+  MANIFEST_PATH: custom_components/openclaw_conversation/manifest.json
+
+jobs:
+  bump:
+    name: Bump manifest version
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+
+      - name: Update manifest version
+        id: version
+        env:
+          VERSION: ${{ inputs.version }}
+          CREATE_TAG: ${{ inputs.create_tag }}
+        run: |
+          python <<'PY'
+          import json
+          import os
+          import re
+          from pathlib import Path
+
+          version = os.environ["VERSION"].strip()
+          if version.startswith("v"):
+              raise SystemExit("Use a plain version here, e.g. 0.4.3, not v0.4.3.")
+          if not re.fullmatch(r"\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?", version):
+              raise SystemExit(f"Invalid version: {version}")
+
+          manifest_path = Path(os.environ["MANIFEST_PATH"])
+          data = json.loads(manifest_path.read_text())
+          current = data.get("version")
+          if current == version:
+              raise SystemExit(f"manifest.json is already at {version}")
+
+          data["version"] = version
+          manifest_path.write_text(json.dumps(data, indent=2) + "\n")
+          PY
+
+          echo "version=${VERSION}" >> "${GITHUB_OUTPUT}"
+          echo "tag=v${VERSION}" >> "${GITHUB_OUTPUT}"
+
+      - name: Commit version bump
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "${MANIFEST_PATH}"
+          git commit -m "chore: bump version to ${VERSION}"
+          git push
+
+      - name: Create and push release tag
+        if: ${{ inputs.create_tag }}
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          git tag "${TAG}"
+          git push origin "${TAG}"
+
+      - name: Summary
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          TAG: ${{ steps.version.outputs.tag }}
+          CREATE_TAG: ${{ inputs.create_tag }}
+        run: |
+          {
+            echo "## Prepared release ${VERSION}"
+            echo ""
+            echo "- Updated \`${MANIFEST_PATH}\`"
+            echo "- Committed \`chore: bump version to ${VERSION}\`"
+            if [ "${CREATE_TAG}" = "true" ]; then
+              echo "- Created and pushed \`${TAG}\`"
+            else
+              echo "- Did not create a tag. Run the Release workflow with \`${TAG}\` when ready."
+            fi
+          } >> "${GITHUB_STEP_SUMMARY}"
