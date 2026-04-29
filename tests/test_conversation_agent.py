@@ -71,6 +71,7 @@ class _Agent(OpenClawConversationAgent):
         text: str,
         principal: dict[str, str],
         language: str,
+        conversation_id: str,
     ) -> str:
         """Return a controlled response instead of calling OpenClaw."""
         self.calls.append(
@@ -79,6 +80,7 @@ class _Agent(OpenClawConversationAgent):
                 "session_key": self._session_key,
                 "principal": principal,
                 "language": language,
+                "conversation_id": conversation_id,
             }
         )
         if isinstance(self.response, BaseException):
@@ -240,21 +242,22 @@ async def test_async_process_returns_response_and_records_chat_log() -> None:
             "session_key": DEFAULT_SESSION_KEY,
             "principal": {"user_id": "user-1", "device_id": "device-1"},
             "language": "en",
+            "conversation_id": "conversation-1",
         }
     ]
     assert agent.chat_log == [("conversation-1", "Done ")]
 
 
 @pytest.mark.asyncio
-async def test_async_process_generates_conversation_id() -> None:
-    """Generate and reuse a conversation ID when Home Assistant does not pass one."""
+async def test_async_process_uses_session_key_without_conversation_id() -> None:
+    """Use the stable OpenClaw session when Home Assistant starts a fresh window."""
     agent = _Agent("Done")
 
     result = await agent.async_process(_conversation_input(conversation_id=None))
 
-    assert result.conversation_id
+    assert result.conversation_id == DEFAULT_SESSION_KEY
     assert agent.calls[0]["session_key"] == DEFAULT_SESSION_KEY
-    assert agent.chat_log == [(result.conversation_id, "Done")]
+    assert agent.chat_log == [(DEFAULT_SESSION_KEY, "Done")]
 
 
 @pytest.mark.parametrize(
@@ -400,6 +403,7 @@ async def test_call_openclaw_sends_expected_payload(
         "Hi",
         {"user_id": "user-1", "device_id": "device-1"},
         "en",
+        "conversation-1",
     )
 
     assert result == "Hello there"
@@ -409,7 +413,7 @@ async def test_call_openclaw_sends_expected_payload(
     assert session.calls[0]["headers"] == {
         "Authorization": "Bearer secret",
         "Content-Type": "application/json",
-        "x-openclaw-session-key": DEFAULT_SESSION_KEY,
+        "x-openclaw-session-key": f"{DEFAULT_SESSION_KEY}:conversation-1",
         "x-openclaw-message-channel": "homeassistant",
     }
     payload = cast(dict[str, object], session.calls[0]["json"])
@@ -420,8 +424,9 @@ async def test_call_openclaw_sends_expected_payload(
     ]
     assert payload["stream"] is True
     assert payload["language"] == "en"
-    assert payload["conversation_id"] == DEFAULT_SESSION_KEY
-    assert payload["user"] == DEFAULT_SESSION_KEY
+    assert payload["conversation_id"] == f"{DEFAULT_SESSION_KEY}:conversation-1"
+    assert payload["user"] == f"{DEFAULT_SESSION_KEY}:conversation-1"
+    assert payload["home_assistant_conversation_id"] == "conversation-1"
     assert "agent_id" not in payload
     assert payload["user_id"] == "user-1"
     assert payload["device_id"] == "device-1"
@@ -452,6 +457,7 @@ async def test_call_openclaw_omits_empty_system_prompt(
             "Hi",
             {"user_id": "", "device_id": ""},
             "en",
+            DEFAULT_SESSION_KEY,
         )
         == "ok"
     )
@@ -483,11 +489,12 @@ async def test_call_openclaw_sends_configured_agent_id(
             "Hi",
             {"user_id": "", "device_id": ""},
             "en",
+            "conversation-1",
         )
         == "ok"
     )
 
-    expected_session_key = "agent:homeops:home-assistant-assist"
+    expected_session_key = "agent:homeops:conversation-1"
     assert session.calls[0]["headers"] == {
         "Authorization": "Bearer secret",
         "Content-Type": "application/json",
@@ -498,6 +505,7 @@ async def test_call_openclaw_sends_configured_agent_id(
     assert payload["agent_id"] == "homeops"
     assert payload["conversation_id"] == expected_session_key
     assert payload["user"] == expected_session_key
+    assert payload["home_assistant_conversation_id"] == "conversation-1"
 
 
 @pytest.mark.asyncio
@@ -521,6 +529,7 @@ async def test_call_openclaw_raises_for_non_success_response(
             "Hi",
             {"user_id": "", "device_id": ""},
             "en",
+            DEFAULT_SESSION_KEY,
         )
 
 
@@ -537,3 +546,28 @@ def test_normalize_session_key() -> None:
     )
     assert OpenClawConversationAgent._normalize_session_key("") == DEFAULT_SESSION_KEY
     assert OpenClawConversationAgent._normalize_session_key(None) == DEFAULT_SESSION_KEY
+
+
+def test_compose_openclaw_session_key() -> None:
+    """Combine OpenClaw session config with Home Assistant session ids."""
+    assert (
+        OpenClawConversationAgent._compose_openclaw_session_key(
+            DEFAULT_SESSION_KEY,
+            DEFAULT_SESSION_KEY,
+        )
+        == DEFAULT_SESSION_KEY
+    )
+    assert (
+        OpenClawConversationAgent._compose_openclaw_session_key(
+            DEFAULT_SESSION_KEY,
+            "conversation-1",
+        )
+        == f"{DEFAULT_SESSION_KEY}:conversation-1"
+    )
+    assert (
+        OpenClawConversationAgent._compose_openclaw_session_key(
+            "agent:homeops:home-assistant-assist",
+            "conversation-1",
+        )
+        == "agent:homeops:conversation-1"
+    )

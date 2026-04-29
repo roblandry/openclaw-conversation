@@ -25,7 +25,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.chat_session import async_get_chat_session
-from homeassistant.util import dt as dt_util, ulid
+from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_AGENT_ID,
@@ -209,7 +209,7 @@ class OpenClawConversationAgent(AbstractConversationAgent):
 
     async def async_process(self, user_input: ConversationInput) -> ConversationResult:
         """Process a sentence."""
-        conversation_id = user_input.conversation_id or ulid.ulid_now()
+        conversation_id = user_input.conversation_id or self._session_key
         principal = self._resolve_principal(user_input)
 
         try:
@@ -218,6 +218,7 @@ class OpenClawConversationAgent(AbstractConversationAgent):
                 user_input.text,
                 principal,
                 user_input.language,
+                conversation_id,
             )
             elapsed = time.monotonic() - start
             _LOGGER.info(
@@ -299,6 +300,22 @@ class OpenClawConversationAgent(AbstractConversationAgent):
         return DEFAULT_SESSION_KEY
 
     @staticmethod
+    def _compose_openclaw_session_key(
+        base_session_key: str, conversation_id: str
+    ) -> str:
+        """Combine the configured OpenClaw session with Home Assistant's session."""
+        if not conversation_id or conversation_id == base_session_key:
+            return base_session_key
+
+        agent_suffix = f":{DEFAULT_SESSION_KEY}"
+        if base_session_key.startswith("agent:") and base_session_key.endswith(
+            agent_suffix
+        ):
+            return f"{base_session_key[: -len(agent_suffix)]}:{conversation_id}"
+
+        return f"{base_session_key}:{conversation_id}"
+
+    @staticmethod
     def _normalize_timeout(value: Any) -> int:
         """Normalize the configured timeout to a non-negative integer."""
         try:
@@ -330,12 +347,17 @@ class OpenClawConversationAgent(AbstractConversationAgent):
         text: str,
         principal: dict[str, str],
         language: str,
+        conversation_id: str,
     ) -> str:
         """Call OpenClaw chat completions API with streaming."""
+        request_session_key = self._compose_openclaw_session_key(
+            self._session_key,
+            conversation_id,
+        )
         headers = {
             "Authorization": f"Bearer {self._api_key}",
             "Content-Type": "application/json",
-            "x-openclaw-session-key": self._session_key,
+            "x-openclaw-session-key": request_session_key,
             "x-openclaw-message-channel": "homeassistant",
         }
 
@@ -350,8 +372,9 @@ class OpenClawConversationAgent(AbstractConversationAgent):
             "stream": True,
             "language": language,
             "local_date": dt_util.now().date().isoformat(),
-            "conversation_id": self._session_key,
-            "user": self._session_key,
+            "conversation_id": request_session_key,
+            "user": request_session_key,
+            "home_assistant_conversation_id": conversation_id,
             "user_id": principal["user_id"],
             "device_id": principal["device_id"],
         }
