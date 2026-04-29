@@ -8,12 +8,23 @@ on:
         required: true
         type: string
       create_tag:
-        description: "Create and push the matching v<version> tag"
+        description: "Create the matching v<version> tag and dispatch the Release workflow"
+        default: false
+        required: true
+        type: boolean
+      draft:
+        description: "Create the GitHub release as a draft when dispatching Release"
+        default: true
+        required: true
+        type: boolean
+      prerelease:
+        description: "Mark the GitHub release as a prerelease when dispatching Release"
         default: false
         required: true
         type: boolean
 
 permissions:
+  actions: write
   contents: write
 
 env:
@@ -56,17 +67,21 @@ jobs:
           manifest_path = Path(os.environ["MANIFEST_PATH"])
           data = json.loads(manifest_path.read_text())
           current = data.get("version")
-          if current == version:
-              raise SystemExit(f"manifest.json is already at {version}")
+          changed = current != version
+          if changed:
+              data["version"] = version
+              manifest_path.write_text(json.dumps(data, indent=2) + "\n")
 
-          data["version"] = version
-          manifest_path.write_text(json.dumps(data, indent=2) + "\n")
+          output_path = Path(os.environ["GITHUB_OUTPUT"])
+          with output_path.open("a") as output:
+              print(f"changed={str(changed).lower()}", file=output)
           PY
 
           echo "version=${VERSION}" >> "${GITHUB_OUTPUT}"
           echo "tag=v${VERSION}" >> "${GITHUB_OUTPUT}"
 
       - name: Commit version bump
+        if: ${{ steps.version.outputs.changed == 'true' }}
         env:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
@@ -81,22 +96,46 @@ jobs:
         env:
           TAG: ${{ steps.version.outputs.tag }}
         run: |
-          git tag "${TAG}"
-          git push origin "${TAG}"
+          if git rev-parse "${TAG}" >/dev/null 2>&1; then
+            echo "Tag ${TAG} already exists locally."
+          else
+            git tag "${TAG}"
+            git push origin "${TAG}"
+          fi
+
+      - name: Dispatch release workflow
+        if: ${{ inputs.create_tag }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.version.outputs.tag }}
+          DRAFT: ${{ inputs.draft }}
+          PRERELEASE: ${{ inputs.prerelease }}
+        run: |
+          gh workflow run release.yaml \
+            --ref main \
+            -f tag="${TAG}" \
+            -f draft="${DRAFT}" \
+            -f prerelease="${PRERELEASE}"
 
       - name: Summary
         env:
           VERSION: ${{ steps.version.outputs.version }}
           TAG: ${{ steps.version.outputs.tag }}
           CREATE_TAG: ${{ inputs.create_tag }}
+          CHANGED: ${{ steps.version.outputs.changed }}
         run: |
           {
             echo "## Prepared release ${VERSION}"
             echo ""
             echo "- Updated \`${MANIFEST_PATH}\`"
-            echo "- Committed \`chore: bump version to ${VERSION}\`"
+            if [ "${CHANGED}" = "true" ]; then
+              echo "- Committed \`chore: bump version to ${VERSION}\`"
+            else
+              echo "- Manifest was already at \`${VERSION}\`"
+            fi
             if [ "${CREATE_TAG}" = "true" ]; then
-              echo "- Created and pushed \`${TAG}\`"
+              echo "- Ensured \`${TAG}\` exists"
+              echo "- Dispatched the Release workflow for \`${TAG}\`"
             else
               echo "- Did not create a tag. Run the Release workflow with \`${TAG}\` when ready."
             fi

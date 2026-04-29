@@ -38,6 +38,37 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Resolve release metadata
+        id: metadata
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            tag="${{ inputs.tag }}"
+            draft="${{ inputs.draft }}"
+            prerelease="${{ inputs.prerelease }}"
+          else
+            tag="${GITHUB_REF_NAME}"
+            draft="false"
+            prerelease="false"
+          fi
+
+          version="${tag#v}"
+          target_sha="$(git rev-list -n 1 "${tag}")"
+
+          git checkout --detach "${tag}"
+
+          manifest_version="$(python -c 'import json; print(json.load(open("custom_components/openclaw_conversation/manifest.json"))["version"])')"
+
+          if [ "${version}" != "${manifest_version}" ]; then
+            echo "Tag ${tag} does not match manifest version ${manifest_version}."
+            exit 1
+          fi
+
+          echo "tag=${tag}" >> "${GITHUB_OUTPUT}"
+          echo "version=${version}" >> "${GITHUB_OUTPUT}"
+          echo "target_sha=${target_sha}" >> "${GITHUB_OUTPUT}"
+          echo "draft=${draft}" >> "${GITHUB_OUTPUT}"
+          echo "prerelease=${prerelease}" >> "${GITHUB_OUTPUT}"
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -54,32 +85,6 @@ jobs:
           pyright
           pytest -q
 
-      - name: Resolve release metadata
-        id: metadata
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            tag="${{ inputs.tag }}"
-            draft="${{ inputs.draft }}"
-            prerelease="${{ inputs.prerelease }}"
-          else
-            tag="${GITHUB_REF_NAME}"
-            draft="false"
-            prerelease="false"
-          fi
-
-          version="${tag#v}"
-          manifest_version="$(python -c 'import json; print(json.load(open("custom_components/openclaw_conversation/manifest.json"))["version"])')"
-
-          if [ "${version}" != "${manifest_version}" ]; then
-            echo "Tag ${tag} does not match manifest version ${manifest_version}."
-            exit 1
-          fi
-
-          echo "tag=${tag}" >> "${GITHUB_OUTPUT}"
-          echo "version=${version}" >> "${GITHUB_OUTPUT}"
-          echo "draft=${draft}" >> "${GITHUB_OUTPUT}"
-          echo "prerelease=${prerelease}" >> "${GITHUB_OUTPUT}"
-
       - name: Build release archive
         run: |
           mkdir -p dist
@@ -94,6 +99,7 @@ jobs:
         env:
           RELEASE_TAG: ${{ steps.metadata.outputs.tag }}
           RELEASE_VERSION: ${{ steps.metadata.outputs.version }}
+          RELEASE_TARGET: ${{ steps.metadata.outputs.target_sha }}
           DOMAIN: ${{ env.DOMAIN }}
         with:
           script: |
@@ -101,13 +107,14 @@ jobs:
 
             const tag = process.env.RELEASE_TAG;
             const version = process.env.RELEASE_VERSION;
+            const target = process.env.RELEASE_TARGET;
             const domain = process.env.DOMAIN;
 
             const generated = await github.rest.repos.generateReleaseNotes({
               owner: context.repo.owner,
               repo: context.repo.repo,
               tag_name: tag,
-              target_commitish: context.sha,
+              target_commitish: target,
             });
 
             const body = [
