@@ -15,7 +15,7 @@
         },
         "data_description": {
           "system_prompt": "Instructions envoyées avant chaque conversation (ex : réponses courtes pour la voix)",
-          "session_key": "Session OpenClaw stable utilisée pour le contexte Home Assistant Assist. Pour cibler un agent précis, utilisez agent:<agent_id>:home-assistant-assist.",
+          "session_key": "Session OpenClaw stable utilisée pour le contexte Home Assistant Assist. Pour cibler un agent précis, utilisez agent:AGENT_ID:home-assistant-assist.",
           "timeout": "Mettre à 0 pour désactiver le timeout (recommandé pour les requêtes longues)"
         }
       },
@@ -32,7 +32,7 @@
         },
         "data_description": {
           "system_prompt": "Instructions envoyées avant chaque conversation (ex : réponses courtes pour la voix)",
-          "session_key": "Session OpenClaw stable utilisée pour le contexte Home Assistant Assist. Pour cibler un agent précis, utilisez agent:<agent_id>:home-assistant-assist.",
+          "session_key": "Session OpenClaw stable utilisée pour le contexte Home Assistant Assist. Pour cibler un agent précis, utilisez agent:AGENT_ID:home-assistant-assist.",
           "timeout": "Mettre à 0 pour désactiver le timeout (recommandé pour les requêtes longues)"
         }
       }
@@ -62,7 +62,7 @@
           "strip_emoji": "Supprimer les emojis des réponses"
         },
         "data_description": {
-          "session_key": "Session OpenClaw stable utilisée pour le contexte Home Assistant Assist. Pour cibler un agent précis, utilisez agent:<agent_id>:home-assistant-assist.",
+          "session_key": "Session OpenClaw stable utilisée pour le contexte Home Assistant Assist. Pour cibler un agent précis, utilisez agent:AGENT_ID:home-assistant-assist.",
           "timeout": "Mettre à 0 pour désactiver le timeout (recommandé pour les requêtes longues)"
         }
       }
